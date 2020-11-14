@@ -4,7 +4,7 @@
 
 #include "calibration.h"
 
-void order_phases(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
+void order_phases(AngularPositionSensorStruct* encoderStruct, ControllerStruct *controller){
     
     ///Checks phase order, to ensure that positive Q current produces
     ///torque in the positive direction wrt the position sensor.
@@ -46,7 +46,7 @@ void order_phases(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
         TIM1->CCR2 = (PWM_ARR>>1)*(1.0f-dtc_v);
         TIM1->CCR1 = (PWM_ARR>>1)*(1.0f-dtc_w);
                                                                   //sample position sensor
-       theta_actual = ps->GetMechPositionFixed();
+       theta_actual = encoderStruct->mech_position + encoderStruct->offset;
        if(theta_ref==0){theta_start = theta_actual;}
        if(sample_counter > 200){
            sample_counter = 0 ;
@@ -55,7 +55,7 @@ void order_phases(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
         sample_counter++;
         theta_ref += 0.001f;
         }
-    float theta_end = ps->GetMechPositionFixed();
+    float theta_end = encoderStruct->mech_position + encoderStruct->offset;
     int direction = (theta_end - theta_start)>0;
     printf("Theta Start:   %f    Theta End:  %f\n\r", theta_start, theta_end);
     printf("Direction:  %d\n\r", direction);
@@ -64,7 +64,7 @@ void order_phases(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
 //    PHASE_ORDER = direction;
 }
     
-    
+/*
 void calibrate(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
     /// Measures the electrical angle offset of the position sensor
     /// and (in the future) corrects nonlinearity due to position sensor eccentricity
@@ -181,8 +181,8 @@ void calibrate(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
         
             
         ps->SetElecOffset(offset);                                              // Set position sensor offset
-        __float_reg[0] = offset;
-        E_OFFSET = offset;
+//        __float_reg[0] = offset;
+//        E_OFFSET = offset;
         
         /// Perform filtering to linearize position sensor eccentricity
         /// FIR n-sample average, where n = number of samples in one electrical cycle
@@ -239,4 +239,5 @@ void calibrate(SPIStruct* sensorSPIStruct, ControllerStruct *controller){
 
 
 
-    }
+}
+*/

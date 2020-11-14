@@ -144,6 +144,7 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
   if(hspi->Instance == SPI1){
 		HAL_GPIO_WritePin(MA700_CS_GPIO_Port, MA700_CS_Pin, GPIO_PIN_SET);
 		s_ma700xSPI.SPI_RX_Flag = 1;
+		s_encoder.raw_value     = s_ma700xSPI.SPI_RX_Data[0];
   }
   if(hspi->Instance == SPI2){
 		HAL_GPIO_WritePin(DRV8323_CS_GPIO_Port, DRV8323_CS_Pin, GPIO_PIN_SET);

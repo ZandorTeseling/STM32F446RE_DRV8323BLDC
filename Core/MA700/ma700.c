@@ -44,7 +44,7 @@ void updateEncoder(float a_dt){
 	uint16_t old_raw = s_encoder.raw_value;
 	float old_mech_position = s_encoder.mech_position;
 
-	s_encoder.raw_value 	     = s_ma700xSPI.SPI_RX_Data[0];
+	//s_encoder.raw_value 	     = s_ma700xSPI.SPI_RX_Data[0]; //Updated in callback
 	s_encoder.old_rotation_ratio = s_encoder.rotation_ratio;
 	s_encoder.rotation_ratio     = s_encoder.raw_value  / (float) MA700_CPR;
 

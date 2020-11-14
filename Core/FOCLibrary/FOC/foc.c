@@ -162,7 +162,7 @@ void field_weaken(ControllerStruct *controller)
        //float i_cmd_mag_sq = controller->i_d_ref*controller->i_d_ref + controller->i_q_ref*controller->i_q_ref;
        
 }
-void commutate(ControllerStruct *controller, ObserverStruct *observer, GPIOStruct *gpio, float theta)
+void commutate(ControllerStruct *controller, ObserverStruct *observer, float theta)
 {
        /// Commutation Loop ///
        controller->loop_count ++;   

@@ -15,10 +15,10 @@
 #define I_MAX                   5                                  // Torque limit (current limit = torque_limit/(kt*gear ratio))
 //#define THETA_MIN               __float_reg[4]                                  // Minimum position setpoint
 //#define THETA_MAX               __float_reg[5]                                  // Maximum position setpoint
-#define I_FW_MAX                5                                  // Maximum field weakening current
-#define R_NOMINAL               0.15                                  // Nominal motor resistance, set during calibration
+#define I_FW_MAX                5                                   // Maximum field weakening current
+#define R_NOMINAL               0.15                                // Nominal motor resistance, set during calibration
 #define TEMP_MAX                65                                  // Temperature safety lmit
-//#define I_MAX_CONT              __float_reg[9]                                  // Continuous max current
-
+#define I_MAX_CONT              2.5                                 // Continuous max current
+#define PHASE_ORDER  			0
 
 #endif /* INC_USER_CONFIGS_H_ */

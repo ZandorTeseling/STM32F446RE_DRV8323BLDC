@@ -18,7 +18,7 @@ void zero_current(int *offset_1, int *offset_2);
 void reset_foc(ControllerStruct *controller);
 void reset_observer(ObserverStruct *observer);
 void init_controller_params(ControllerStruct *controller);
-void commutate(ControllerStruct *controller, ObserverStruct *observer, GPIOStruct *gpio, float theta);
+void commutate(ControllerStruct *controller, ObserverStruct *observer, float theta);
 void torque_control(ControllerStruct *controller);
 void limit_current_ref (ControllerStruct *controller);
 void update_observer(ControllerStruct *controller, ObserverStruct *observer);
