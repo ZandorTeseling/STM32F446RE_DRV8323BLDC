@@ -53,19 +53,10 @@ SPI_HandleTypeDef hspi2;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim10;
 
-UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 extern CircularBuffer gRX_buffer;
-
-extern CAN_FilterTypeDef   sFilterConfig_CAN1;
-extern CAN_TxHeaderTypeDef TxHeader_CAN1;
-extern CAN_RxHeaderTypeDef RxHeader_CAN1;
-extern uint8_t             TxData_CAN1[8];
-extern uint8_t             RxData_CAN1[8];
-extern uint32_t            TxMailbox_CAN1;
-extern uint8_t 			   RxFlag_CAN1;
-
 
 extern SPIStruct s_drv832xSPI;
 extern SPIStruct s_ma700xSPI;
@@ -95,7 +86,7 @@ static void MX_ADC1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_TIM10_Init(void);
-static void MX_USART1_UART_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void Timer1Process(void);
 void Timer10Process(void);
@@ -262,8 +253,8 @@ void Timer10Process(void)
 {
 	if(TIMER10_Flag == 1){
 		//Trigger a angle measurement
-		printEncoder();
-//		printf("ADC1[]: 0x%x   ADC2[]: 0x%x\n\r", controller.adc1_raw, controller.adc2_raw);
+		//printEncoder();
+		//printf("ADC1[]: 0x%x   ADC2[]: 0x%x\n\r", controller.adc1_raw, controller.adc2_raw);
 	}
 	TIMER10_Flag = 0;
 }
@@ -344,7 +335,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART1_UART_Init();
   MX_SPI1_Init();
   MX_I2C1_Init();
   MX_CAN1_Init();
@@ -353,26 +343,35 @@ int main(void)
   MX_SPI2_Init();
   MX_ADC2_Init();
   MX_TIM10_Init();
-
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim1); //Start the timers
   HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start_IT(&htim1, TIM_CHANNEL_4);
   HAL_TIM_Base_Start_IT(&htim10);
 
-  DRV832x_initSPIInterface(DRV8323_CS_GPIO_Port,DRV8323_CS_Pin,&hspi2);
+  DRV832x_initSPIInterface(DRV8323_CS_GPIO_Port,DRV8323_CS_Pin,&hspi2,DRV8323_ENABLE_GPIO_Port, DRV8323_ENABLE_Pin);
+  DRV832x_enableHiZState(DRV8323_HIZ_GPIO_Port,DRV8323_HIZ_Pin);
   MA700_initSPIInterface(MA700_CS_GPIO_Port,MA700_CS_Pin,&hspi1);
 
 
   enable_can1(); //Start can and set filter to accept all msgs
 
-  RetargetInit(&huart1); //Configure/Init the uart i/o interface.
+  RetargetInit(&huart3); //Configure/Init the uart i/o interface.
   InitCommandLineProcess();
 
   printf("\033\143"); //Reset the putty terminal.
   printf("\rHello World\n\r");
-  MCP9808PrintTemp(&hi2c1); //I2C for shits and gigs, currently in blocking mode.
+  HAL_Delay(1);
+  //MCP9808PrintTemp(&hi2c1); //I2C for shits and gigs, currently in blocking mode.
 
+  DRV832x_read_FSR1();
+  HAL_Delay(1);
+  SPI2Process();
+  DRV832x_read_FSR2();
+  HAL_Delay(1);
+  SPI2Process();
+  DRV832x_blocking_configure();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -381,12 +380,12 @@ int main(void)
   {
 	CommandLineProcess();
 
-//	Timer1Process();
-//	Timer10Process();
+	Timer1Process();
+	Timer10Process();
 
-//    Can1Process();
-//    SPI1Process();
-//    SPI2Process();
+    Can1Process();
+    SPI1Process();
+    SPI2Process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -647,7 +646,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -757,8 +756,13 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 800;
-  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  sConfigOC.Pulse = 1000;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.Pulse = 1250;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -796,7 +800,7 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 1801-1;
+  htim10.Init.Prescaler = 18001-1;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim10.Init.Period = 10001-1;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -812,35 +816,35 @@ static void MX_TIM10_Init(void)
 }
 
 /**
-  * @brief USART1 Initialization Function
+  * @brief USART3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART1_Init 0 */
+  /* USER CODE BEGIN USART3_Init 0 */
 
-  /* USER CODE END USART1_Init 0 */
+  /* USER CODE END USART3_Init 0 */
 
-  /* USER CODE BEGIN USART1_Init 1 */
+  /* USER CODE BEGIN USART3_Init 1 */
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
+  /* USER CODE BEGIN USART3_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -859,7 +863,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, TIMER_10_FqCheck_Pin|DRV8323_CS_Pin|MA700_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, TIMER_10_FqCheck_Pin|DRV8323_CS_Pin|MA700_CS_Pin|DRV8323_ENABLE_Pin
+                          |DRV8323_HIZ_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : TIMER_10_FqCheck_Pin */
   GPIO_InitStruct.Pin = TIMER_10_FqCheck_Pin;
@@ -868,8 +873,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(TIMER_10_FqCheck_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DRV8323_CS_Pin MA700_CS_Pin */
-  GPIO_InitStruct.Pin = DRV8323_CS_Pin|MA700_CS_Pin;
+  /*Configure GPIO pins : DRV8323_CS_Pin MA700_CS_Pin DRV8323_ENABLE_Pin DRV8323_HIZ_Pin */
+  GPIO_InitStruct.Pin = DRV8323_CS_Pin|MA700_CS_Pin|DRV8323_ENABLE_Pin|DRV8323_HIZ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

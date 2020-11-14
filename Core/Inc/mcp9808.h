@@ -9,7 +9,7 @@
 #define INC_MCP9808_H_
 
 #include <../Inc/retarget.h>
-#include <../Inc/user_configs.h>
+#include <../Config/user_config.h>
 
 /* MCP9808 high accuracy temp sensor from adafruit (no address pins pulled up) */
 #define MCP9808_REG_TEMP (0x05) // Temperature Register

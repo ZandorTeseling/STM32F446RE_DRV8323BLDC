@@ -34,7 +34,9 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include <../Inc/retarget.h>
 #include <../Inc/string_process.h>
-#include <../Inc/user_configs.h>
+#include <../Config/user_config.h>
+#include <../Config/motor_config.h>
+#include <../Config/hw_config.h>
 #include <../Inc/can.h>
 #include <../DRV8323_RS/drv8323.h>
 #include <../MA700/ma700.h>
@@ -71,6 +73,10 @@ void Error_Handler(void);
 #define DRV8323_CS_GPIO_Port GPIOC
 #define MA700_CS_Pin GPIO_PIN_7
 #define MA700_CS_GPIO_Port GPIOC
+#define DRV8323_ENABLE_Pin GPIO_PIN_8
+#define DRV8323_ENABLE_GPIO_Port GPIOC
+#define DRV8323_HIZ_Pin GPIO_PIN_9
+#define DRV8323_HIZ_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

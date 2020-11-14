@@ -10,9 +10,9 @@
 
 #include "stm32f4xx_hal.h"
 #include <../Inc/structs.h>
-#include <../Inc/user_configs.h>
+#include <../Config/user_config.h>
 #include <../Inc/retarget.h>
-#include <../Inc/motor_config.h>
+#include <../Config/motor_config.h>
 
 #define MA700_CPR 0xFFFF
 #define MY_PI 3.1415926535897932

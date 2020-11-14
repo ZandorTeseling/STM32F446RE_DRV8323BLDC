@@ -9,7 +9,7 @@
 #define INC_STRING_PROCESS_H_
 
 #include <../Inc/retarget.h>
-#include <../Inc/user_configs.h>
+#include <../Config/user_config.h>
 
 typedef struct{
 	unsigned char io_s[CIRCBUFFSIZE+1];

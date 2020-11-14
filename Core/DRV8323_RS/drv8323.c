@@ -10,13 +10,33 @@
 
 volatile SPIStruct s_drv832xSPI;
 
-void DRV832x_initSPIInterface(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, SPI_HandleTypeDef* pspi){
+
+void DRV832x_initSPIInterface(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, SPI_HandleTypeDef* pspi, GPIO_TypeDef* Enable_GPIOx, uint16_t Enable_GPIO_Pin){
+	DRV832x_enable(Enable_GPIOx,Enable_GPIO_Pin);
 	s_drv832xSPI.PORT_GPIOx = GPIOx;
 	s_drv832xSPI.CS_GPIO_Pin = GPIO_Pin;
 	s_drv832xSPI.pSPI_Handle = pspi;
 	s_drv832xSPI.SPI_TX_Flag = 0;
 	s_drv832xSPI.SPI_RX_Flag = 0;
+
 }
+
+void DRV832x_enableHiZState(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin){
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+}
+
+void DRV832x_disableHiZState(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin){
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
+}
+
+void DRV832x_enable(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin){
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
+}
+
+void DRV832x_disable(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin){
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+}
+
 
 void DRV832x_trigger_spi_write(uint16_t val)
 {
@@ -27,13 +47,13 @@ void DRV832x_trigger_spi_write(uint16_t val)
 
 void DRV832x_read_FSR1(void)
 {
-    uint16_t val = (1<<15) | FSR1;
+    uint16_t val = (1<<15) | (FSR1 << 11);
     DRV832x_trigger_spi_write(val);
 }
 
 void DRV832x_read_FSR2(void)
 {
-    uint16_t val = (1<<15) | FSR2;
+    uint16_t val = (1<<15) | (FSR2 << 11);
     DRV832x_trigger_spi_write(val);
 }
 
@@ -126,4 +146,34 @@ void DRV832x_calibrate(void)
 {
     uint16_t val = (0x1<<4) + (0x1<<3) + (0x1<<2);
     DRV832x_write_register(CSACR, val);
+}
+
+//TODO Use this method to configure the drv8323
+void DRV832x_blocking_configure(void){
+	//Trigger op amp offset calibrate.
+	printf("\n\rConfiguring DRV8323\n\r");
+	printf("1:write DRV8323_CSAR\n\r");
+	DRV832x_calibrate();
+	while(s_drv832xSPI.SPI_RX_Flag != 1){};
+	HAL_Delay(5);
+	SPI2Process();
+	//Driver Control Register config.
+	printf("2:write DRV8323_DCR\n\r");
+	DRV832x_write_DCR(DIS_CPUV_EN, DIS_GDF_DIS, OTW_REP_DIS, PWM_MODE_3X, 0x0, 0x0, 0x0, 0x0, 0x1);
+
+	while(s_drv832xSPI.SPI_RX_Flag != 1){};
+	HAL_Delay(5);
+	SPI2Process();
+	printf("3:read DRV8323_DCR\n\r");
+	DRV832x_trigger_read_register(DCR);
+	while(s_drv832xSPI.SPI_RX_Flag != 1){};
+	HAL_Delay(5);
+    SPI2Process();
+	//Set Current Sense Register
+    printf("4:write DRV8323_CSAR\n\r");
+    DRV832x_write_CSACR(CSA_FET_SP, VREF_DIV_2, 0x0, CSA_GAIN_40, DIS_SEN_EN, 0x1, 0x1, 0x1, SEN_LVL_1_0);
+    while(s_drv832xSPI.SPI_RX_Flag != 1){};
+    HAL_Delay(5);
+    SPI2Process();
+
 }

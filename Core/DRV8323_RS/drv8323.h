@@ -160,8 +160,13 @@
 #define SEN_LVL_1_0         0x3
 
 
+void DRV832x_enable(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+void DRV832x_enableHiZState(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
-void DRV832x_initSPIInterface(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, SPI_HandleTypeDef* pspi);
+void DRV832x_disable(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+void DRV832x_disableHiZState(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+
+void DRV832x_initSPIInterface(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, SPI_HandleTypeDef* pspi, GPIO_TypeDef* Enable_GPIOx, uint16_t Enable_GPIO_Pin);
 void DRV832x_read_FSR1();
 void DRV832x_read_FSR2();
 void DRV832x_read_register(int reg);

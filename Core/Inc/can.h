@@ -8,9 +8,9 @@
 #ifndef INC_CAN_H_
 #define INC_CAN_H_
 
-#include <../Inc/user_configs.h>
 #include <../Inc/structs.h>
 #include "stm32f4xx_hal.h"
+#include "../Config/user_config.h"
 
 void enable_can1();
 

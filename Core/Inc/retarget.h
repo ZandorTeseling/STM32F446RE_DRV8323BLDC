@@ -11,7 +11,7 @@
 #include "stm32f4xx_hal.h"
 #include <sys/stat.h>
 #include <stdio.h>
-#include <../Inc/user_configs.h>
+#include <../Config/user_config.h>
 //USART 1 RingBuffer Settings
 #define CIRCBUFFSIZE 100
 
