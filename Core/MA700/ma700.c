@@ -41,19 +41,18 @@ void resetEncoder(){
 
 //Mechanical position of the encoder is updated.
 void updateEncoder(float a_dt){
-	uint16_t old_raw = s_encoder.raw_value;
 	float old_mech_position = s_encoder.mech_position;
 
-	//s_encoder.raw_value 	     = s_ma700xSPI.SPI_RX_Data[0]; //Updated in callback
+//	s_encoder.raw_value 	     = s_ma700xSPI.SPI_RX_Data[0]; //Updated in callback
 	s_encoder.old_rotation_ratio = s_encoder.rotation_ratio;
-	s_encoder.rotation_ratio     = s_encoder.raw_value  / (float) MA700_CPR;
+	s_encoder.rotation_ratio     = (s_encoder.raw_value >> 2 )  / (float) (MA700_CPR >> 2); //Filter out lower 2 bits
 
 	if(s_encoder.first_sample){
 		//Check at the midpoint of rotation to see if a full rotation has occured
-		if(s_encoder.raw_value - old_raw > MA700_CPR/2 ){
+		if(s_encoder.raw_value - s_encoder.old_raw_value > MA700_CPR/2 ){
 			s_encoder.rotations -= 1;
 		}
-		else if(s_encoder.raw_value - old_raw < -MA700_CPR/2)
+		else if(s_encoder.raw_value - s_encoder.old_raw_value < -MA700_CPR/2)
 		{
 			s_encoder.rotations += 1;
 		}
@@ -74,7 +73,7 @@ void updateEncoder(float a_dt){
 	}
     s_encoder.vel_array[0] = vel;
     s_encoder.mech_velocity  =  sum/((float)n);
-
+    s_encoder.old_raw_value = s_encoder.raw_value;
 }
 
 //To work with no floating point support printf library.

@@ -81,6 +81,7 @@ typedef struct{
 
 	int16_t rotations;
 	uint16_t raw_value;
+	uint16_t old_raw_value;
 	uint8_t pole_pairs;
 	uint8_t first_sample;
 	uint32_t cpr;
